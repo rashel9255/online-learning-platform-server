@@ -39,14 +39,21 @@ async function run() {
         const db = client.db(process.env.DB_NAME);
         const courseCollection = db.collection("courses");
 
-        //add new course
+        //get all courses api
+        app.get("/courses", async (req, res) => {
+            const cursor = courseCollection.find().sort({ _id: -1 });
+            const courses = await cursor.toArray();
+            res.send(courses);
+        });
+
+        //add new course api
         app.post("/courses", async (req, res) => {
             const newCourse = req.body;
             const result = await courseCollection.insertOne(newCourse);
             res.send(result);
         });
 
-        
+
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("MongoDB connected successfully!");
