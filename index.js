@@ -38,12 +38,18 @@ async function run() {
 
         const db = client.db(process.env.DB_NAME);
         const courseCollection = db.collection("courses");
-  
+
+        //add new course
+        app.post("/courses", async (req, res) => {
+            const newCourse = req.body;
+            const result = await courseCollection.insertOne(newCourse);
+            res.send(result);
+        });
+
+        
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("MongoDB connected successfully!");
-
-        
     }
     finally{
 
