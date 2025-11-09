@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -41,9 +41,17 @@ async function run() {
 
         //get all courses api
         app.get("/courses", async (req, res) => {
-            const cursor = courseCollection.find().sort({ _id: -1 });
+            const cursor = courseCollection.find();
             const courses = await cursor.toArray();
             res.send(courses);
+        });
+
+        // get a single course api
+        app.get("/courses/:id", async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const course = await courseCollection.findOne(query);
+            res.send(course);
         });
 
         //add new course api
@@ -52,7 +60,6 @@ async function run() {
             const result = await courseCollection.insertOne(newCourse);
             res.send(result);
         });
-
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
