@@ -61,6 +61,23 @@ async function run() {
             res.send(result);
         });
 
+        //update a course api
+        app.patch("/courses/:id", async (req, res) => {
+            const id = req.params.id;
+            const updatedCourse = req.body;
+            const query = { _id: new ObjectId(id) };
+            const updatedDoc = {
+                $set: {
+                    course_name: updatedCourse.course_name,
+                    price: updatedCourse.price,
+                    category: updatedCourse.category,
+                    description: updatedCourse.description,
+                }
+            }
+            const result = await courseCollection.updateOne(query, updatedDoc);
+            res.send(result);
+        }) 
+
         // Delete a course api
         app.delete("/courses/:id", async (req, res) => {
             const id = req.params.id;
