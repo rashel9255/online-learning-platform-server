@@ -93,6 +93,30 @@ async function run() {
             res.send(result);
         });
 
+
+        //top instructor api
+        app.get("/instructors/top", async (req, res) => {
+            const topInstructors = await courseCollection
+                .aggregate([
+                    {
+                        $group: {
+                            _id: "$instructor.name",
+                            name: { $first: "$instructor.name" },
+                            bio: { $first: "$instructor.bio" },
+                            avatar: { $first: "$instructor.avatar" },
+                            rating: { $avg: "$instructor.rating" },
+                            totalCourses: { $sum: 1 },
+                        },
+                    },
+                    { $sort: { rating: -1, totalCourses: -1 } },
+                    { $limit: 4 },
+                ])
+                .toArray();
+
+            res.send(topInstructors);
+        });
+
+
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("MongoDB connected successfully!");
