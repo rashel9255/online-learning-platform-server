@@ -10,34 +10,34 @@ dotenv.config();
 
 // middleware
 app.use(cors());
-app.use(express.json())
+app.use(express.json());
 
-//mongodb connection uri 
+//mongodb connection uri
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.0ocgkty.mongodb.net/?appName=Cluster`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
     serverApi: {
-      version: ServerApiVersion.v1,
-      strict: true,
-      deprecationErrors: true,
-    }
-  });
-
+        version: ServerApiVersion.v1,
+        strict: true,
+        deprecationErrors: true,
+    },
+});
 
 //default route
 app.get("/", (req, res) => {
     res.send("🚀 Online Learning Platform Server is Running...");
 });
-       
 
 async function run() {
-    try{
+    try {
         // Connect the client to the server	(optional starting in v4.7)
         await client.connect();
 
         const db = client.db(process.env.DB_NAME);
         const courseCollection = db.collection("courses");
+        const usersCollection = db.collection("users");
+        const enrollmentCollection = db.collection("enrollments");
 
         //get all courses api
         app.get("/courses", async (req, res) => {
@@ -47,11 +47,11 @@ async function run() {
         });
 
         //popular courses api
-        app.get('/courses/popular-courses', async (req, res) => {
+        app.get("/courses/popular-courses", async (req, res) => {
             const cursor = courseCollection.find().sort({ studentsEnrolled: -1 }).limit(6);
             const popularCourses = await cursor.toArray();
             res.send(popularCourses);
-        })
+        });
 
         // get a single course api
         app.get("/courses/:id", async (req, res) => {
@@ -59,6 +59,16 @@ async function run() {
             const query = { _id: new ObjectId(id) };
             const course = await courseCollection.findOne(query);
             res.send(course);
+        });
+
+        // Get courses added by specific user api
+        app.get("/courses/user/:email", async (req, res) => {
+            const email = req.params.email;
+            const query = {
+                $or: [{ "instructor.email": email }, { addedBy: email }],
+            };
+            const userCourses = await courseCollection.find(query).toArray();
+            res.send(userCourses);
         });
 
         //add new course api
@@ -79,11 +89,11 @@ async function run() {
                     price: updatedCourse.price,
                     category: updatedCourse.category,
                     description: updatedCourse.description,
-                }
-            }
+                },
+            };
             const result = await courseCollection.updateOne(query, updatedDoc);
             res.send(result);
-        }) 
+        });
 
         // Delete a course api
         app.delete("/courses/:id", async (req, res) => {
@@ -92,7 +102,6 @@ async function run() {
             const result = await courseCollection.deleteOne(query);
             res.send(result);
         });
-
 
         //top instructor api
         app.get("/instructors/top", async (req, res) => {
@@ -116,18 +125,16 @@ async function run() {
             res.send(topInstructors);
         });
 
-
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("MongoDB connected successfully!");
+    } finally {
     }
-    finally{
-
-    }
-} 
+}
 
 run().catch(console.dir);
 
 app.listen(port, () => {
     console.log(`🚀 Server is running on port ${port}`);
 });
+
