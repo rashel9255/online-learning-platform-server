@@ -46,6 +46,13 @@ async function run() {
             res.send(courses);
         });
 
+        //popular courses api
+        app.get('/courses/popular-courses', async (req, res) => {
+            const cursor = courseCollection.find().sort({ studentsEnrolled: -1 }).limit(6);
+            const popularCourses = await cursor.toArray();
+            res.send(popularCourses);
+        })
+
         // get a single course api
         app.get("/courses/:id", async (req, res) => {
             const id = req.params.id;
