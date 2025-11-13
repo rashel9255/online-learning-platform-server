@@ -37,10 +37,10 @@ async function run() {
         const db = client.db(process.env.DB_NAME);
         const courseCollection = db.collection("courses");
         const usersCollection = db.collection("users");
-        const enrollmentCollection = db.collection("enrollments");
 
         //get all courses api
         app.get("/courses", async (req, res) => {
+            console.log(req.query);
             const cursor = courseCollection.find();
             const courses = await cursor.toArray();
             res.send(courses);
@@ -61,12 +61,10 @@ async function run() {
             res.send(course);
         });
 
-        // Get courses added by specific user api
+        // Get courses added by a specific user (instructor)
         app.get("/courses/user/:email", async (req, res) => {
             const email = req.params.email;
-            const query = {
-                $or: [{ "instructor.email": email }, { addedBy: email }],
-            };
+            const query = { "instructor.email": email };
             const userCourses = await courseCollection.find(query).toArray();
             res.send(userCourses);
         });
@@ -85,10 +83,16 @@ async function run() {
             const query = { _id: new ObjectId(id) };
             const updatedDoc = {
                 $set: {
-                    course_name: updatedCourse.course_name,
-                    price: updatedCourse.price,
+                    title: updatedCourse.title,
+                    course_name: updatedCourse.title, // Keep for backward compatibility
+                    price: parseFloat(updatedCourse.price),
                     category: updatedCourse.category,
                     description: updatedCourse.description,
+                    duration: updatedCourse.duration,
+                    thumbnail: updatedCourse.thumbnail || updatedCourse.image,
+                    image: updatedCourse.thumbnail || updatedCourse.image,
+                    isFeatured: updatedCourse.isFeatured,
+                    lastUpdated: new Date().toISOString().split("T")[0],
                 },
             };
             const result = await courseCollection.updateOne(query, updatedDoc);
@@ -137,4 +141,3 @@ run().catch(console.dir);
 app.listen(port, () => {
     console.log(`🚀 Server is running on port ${port}`);
 });
-
