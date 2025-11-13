@@ -37,6 +37,7 @@ async function run() {
         const db = client.db(process.env.DB_NAME);
         const courseCollection = db.collection("courses");
         const usersCollection = db.collection("users");
+        const enrolledCoursesCollection = db.collection("enrolled-courses");
 
         //get all courses api
         app.get("/courses", async (req, res) => {
@@ -104,6 +105,18 @@ async function run() {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await courseCollection.deleteOne(query);
+            res.send(result);
+        });
+
+        // Enrolled courses APIs
+
+       
+
+        // Add new enrollment
+        app.post("/enrolled-courses", async (req, res) => {
+            const newEnrollment = req.body;
+            newEnrollment.enrolledAt = new Date().toISOString();
+            const result = await enrolledCoursesCollection.insertOne(newEnrollment);
             res.send(result);
         });
 
