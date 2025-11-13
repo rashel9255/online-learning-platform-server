@@ -132,8 +132,41 @@ async function run() {
         // Add new enrollment
         app.post("/enrolled-courses", async (req, res) => {
             const newEnrollment = req.body;
+            const courseId = newEnrollment.courseId;
+
+            // Check if user is already enrolled in this course
+            let existingQuery = {};
+            if (newEnrollment.userId) {
+                existingQuery.userId = newEnrollment.userId;
+            }
+            if (newEnrollment.userEmail) {
+                existingQuery.userEmail = newEnrollment.userEmail;
+            }
+            if (courseId) {
+                existingQuery.courseId = courseId;
+            }
+
+            // Check for existing enrollment
+            const existingEnrollment = await enrolledCoursesCollection.findOne(existingQuery);
+
+            if (existingEnrollment) {
+                return res.status(400).send({
+                    message: "You are already enrolled in this course.",
+                    alreadyEnrolled: true,
+                });
+            }
+
+            // If not enrolled, create new enrollment
             newEnrollment.enrolledAt = new Date().toISOString();
             const result = await enrolledCoursesCollection.insertOne(newEnrollment);
+            res.send(result);
+        });
+
+        // Delete/Remove enrolled course
+        app.delete("/enrolled-courses/:id", async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await enrolledCoursesCollection.deleteOne(query);
             res.send(result);
         });
 
