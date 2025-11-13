@@ -110,7 +110,24 @@ async function run() {
 
         // Enrolled courses APIs
 
-       
+        // Get all enrolled courses for a user
+        app.get("/enrolled-courses", async (req, res) => {
+            const { userId, courseId, userEmail } = req.query;
+            let query = {};
+
+            if (userId) {
+                query.userId = userId;
+            }
+            if (userEmail) {
+                query.userEmail = userEmail;
+            }
+            if (courseId) {
+                query.courseId = courseId;
+            }
+
+            const enrollments = await enrolledCoursesCollection.find(query).toArray();
+            res.send(enrollments);
+        });
 
         // Add new enrollment
         app.post("/enrolled-courses", async (req, res) => {
